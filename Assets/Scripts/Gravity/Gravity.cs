@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+//This script goes on gravity-enabled objects
 public class Gravity : MonoBehaviour
 {
 

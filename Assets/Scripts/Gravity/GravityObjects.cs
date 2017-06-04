@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+//A static class that keeps track of all gravity attractors
 public static class GravityObjects {
 
     //List of all gravity attractors

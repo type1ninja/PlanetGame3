@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+//This script is for gravity attractors, it keeps track of position and mass
 public class GravityMass : MonoBehaviour
 {
     //This boolean indicates whether the gravity center can move
