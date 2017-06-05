@@ -11,16 +11,15 @@ public class SpaceMove : MonoBehaviour {
     //Maximum speed to allow omnidirectional thrust
     public float MAX_SPEED_FOR_BASE = 5.0f;
 
-    private void Start()
-    {
+    private bool nearSurface = false;
+
+    private void Start() {
         rigbod = GetComponent<Rigidbody>();
     }
 
-    private void FixedUpdate()
-    {
+    private void FixedUpdate() {
         //Only do omnidirectional thrust if you're going below a certain speed
-        if (rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
-        {
+        if (nearSurface && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE) {
             //Left/right thrust
             rigbod.AddForce(transform.right * Input.GetAxis("Horizontal") * BASE_ACCEL, ForceMode.VelocityChange);
             //Up/down thrust
@@ -30,5 +29,17 @@ public class SpaceMove : MonoBehaviour {
         }
 
         rigbod.AddForce(transform.forward * Input.GetAxis("Thrust") * MAIN_THRUST, ForceMode.Force);
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        if (other.tag.Equals("Planet")) {
+            nearSurface = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other) {
+        if (other.tag.Equals("Planet")) {
+            nearSurface = false;
+        }
     }
 }
