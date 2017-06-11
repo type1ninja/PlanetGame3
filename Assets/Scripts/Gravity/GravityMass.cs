@@ -28,6 +28,12 @@ public class GravityMass : MonoBehaviour
         }
     }
 
+    //Public method to retrieve the position
+    public Vector3 GetPos()
+    {
+        return pos;
+    }
+
     //Public method to retrieve the mass
     public float GetMass()
     {
@@ -38,11 +44,5 @@ public class GravityMass : MonoBehaviour
     public void SetMass(float newMass)
     {
         mass = newMass;
-    }
-
-    //Public method to retrieve the position
-    public Vector3 GetPos()
-    {
-        return pos;
     }
 }
