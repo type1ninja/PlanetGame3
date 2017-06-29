@@ -26,6 +26,11 @@ public class Launcher : Photon.PunBehaviour {
     /// </summary>
     private string _gameVersion = "0.1.2";
 
+    [Tooltip("The Ui Panel to let the user enter name, connect and play")]
+    private GameObject menuButtonsPanel;
+    [Tooltip("The UI Label to inform the user that the connection is in progress")]
+    private GameObject connectingPanel;
+
     #endregion
 
     #region MonoBehaviour Callbacks
@@ -53,7 +58,11 @@ public class Launcher : Photon.PunBehaviour {
     /// </summary>
     private void Start()
     {
-        Connect();
+        connectingPanel = GameObject.Find("ConnectingPanel");
+        menuButtonsPanel = GameObject.Find("MenuButtonsPanel");
+
+        connectingPanel.SetActive(false);
+        menuButtonsPanel.SetActive(true);
     }
 
     #endregion
@@ -67,6 +76,9 @@ public class Launcher : Photon.PunBehaviour {
     /// </summary>
     public void Connect()
     {
+        connectingPanel.SetActive(true);
+        menuButtonsPanel.SetActive(false);
+
         // we check if we are connected or not, we join if we are, else we initiate the connection to the server.
         if (PhotonNetwork.connected)
         {
@@ -94,12 +106,14 @@ public class Launcher : Photon.PunBehaviour {
 
     public override void OnDisconnectedFromPhoton()
     {
+        connectingPanel.SetActive(false);
+        menuButtonsPanel.SetActive(true);
         Debug.LogWarning("DemoAnimator/Luncher: OnDisconnectedFromPhoton() was called by PUN");
     }
 
     public override void OnPhotonRandomJoinFailed(object[] codeAndMsg)
     {
-        Debug.Log("DemoAnimator/Launcher: OnPhotonRandomJoinFailed was called by PUN. No random room available, so we create one.\nCalling: PhotonNetwork.CreateRoom(null, new RoomOptions() {maxPlayers = 4}, null;");
+        Debug.Log("DemoAnimator/Launcher: OnPhotonRandomJoinFailed was called by PUN. No random room available, so we create one.\nCalling: PhotonNetwork.CreateRoom(null, new RoomOptions() {maxPlayers = 4}, null);");
 
         // #Critical: we failed to join a random room, maybe non exists or they are all full. No worries, we create a new room.
         PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = MaxPlayersPerRoom }, null);
