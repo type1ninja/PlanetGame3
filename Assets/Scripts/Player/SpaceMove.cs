@@ -6,6 +6,7 @@ public class SpaceMove : MonoBehaviour {
     private Rigidbody rigbod;
     private Slider thrustFuelSlider;
     private Slider boostCooldownSlider;
+    private GameManager gameManager;
 
     //WASD + Space + Ctrl thrust force, all directions
     public float BASE_ACCEL = 1.0f;
@@ -36,42 +37,61 @@ public class SpaceMove : MonoBehaviour {
         rigbod = GetComponent<Rigidbody>();
         thrustFuel = MAIN_THRUST_FUEL_MAX;
 
-        thrustFuelSlider = GameObject.Find("HUDCanvas").transform.Find("ThrustFuelSlider").GetComponent<Slider>();
+        thrustFuelSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("ThrustFuelSlider").GetComponent<Slider>();
         thrustFuelSlider.maxValue = MAIN_THRUST_FUEL_MAX;
 
-        boostCooldownSlider = GameObject.Find("HUDCanvas").transform.Find("BoostCooldownSlider").GetComponent<Slider>();
+        boostCooldownSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("BoostCooldownSlider").GetComponent<Slider>();
         boostCooldownSlider.maxValue = BOOST_COOLDOWN_MAX;
+
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
     private void FixedUpdate()
     {
-        //Only do omnidirectional thrust if you're very near a planet and going below a certain speed
-        if (nearSurface && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
+        if (!gameManager.GetIsPaused())
         {
-            //Forward/backward thrust
-            rigbod.AddForce(transform.forward * Input.GetAxis("Vertical") * BASE_ACCEL, ForceMode.VelocityChange);
-            //Left/right thrust
-            rigbod.AddForce(transform.right * Input.GetAxis("Horizontal") * BASE_ACCEL, ForceMode.VelocityChange);
-            //Up/down thrust (deprecated)
-            //rigbod.AddForce(transform.up * Input.GetAxis("JumpAxis") * BASE_ACCEL, ForceMode.VelocityChange);
+            //Only do omnidirectional thrust if you're very near a planet and going below a certain speed
+            if (nearSurface && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
+            {
+                //Forward/backward thrust
+                rigbod.AddForce(transform.forward * Input.GetAxis("Vertical") * BASE_ACCEL, ForceMode.VelocityChange);
+                //Left/right thrust
+                rigbod.AddForce(transform.right * Input.GetAxis("Horizontal") * BASE_ACCEL, ForceMode.VelocityChange);
+                //Up/down thrust (deprecated)
+                //rigbod.AddForce(transform.up * Input.GetAxis("JumpAxis") * BASE_ACCEL, ForceMode.VelocityChange);
+            }
+
+            //Strong boost is located in Update()
+
+            //Main thruster, for orbital adjustments
+            if (Input.GetAxis("MainThrust") != 0 && thrustFuel >= 0)
+            {
+                rigbod.AddForce(transform.forward * Input.GetAxis("MainThrust") * MAIN_THRUST, ForceMode.Impulse);
+            }
         }
-
-        //Strong boost is located in Update()
-
-        //Main thruster, for orbital adjustments
-        if (Input.GetAxis("MainThrust") != 0 && thrustFuel >= 0)
-        {
-            rigbod.AddForce(transform.forward * Input.GetAxis("MainThrust") * MAIN_THRUST, ForceMode.Impulse);
-        } 
     }
 
     private void Update()
     {
-        //Only do strong boost if you're very near a planet, walking, and not on cooldown
-        if (nearSurface && boostCooldown <= 0 && Input.GetAxis("Boost") != 0 && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
+        if (!gameManager.GetIsPaused())
         {
-            rigbod.AddForce(transform.forward * BOOST_FORCE, ForceMode.Impulse);
-            boostCooldown = BOOST_COOLDOWN_MAX;
+            //Only do strong boost if you're very near a planet, walking, and not on cooldown
+            if (nearSurface && boostCooldown <= 0 && Input.GetAxis("Boost") != 0 && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
+            {
+                rigbod.AddForce(transform.forward * BOOST_FORCE, ForceMode.Impulse);
+                boostCooldown = BOOST_COOLDOWN_MAX;
+            }
+
+            //Main thrust fuel consumption and regen
+            if (Input.GetAxis("MainThrust") != 0)
+            {
+                thrustRegenCooldown = MAIN_THRUST_FUEL_REGEN_MAX;
+
+                if (thrustFuel >= 0)
+                {
+                    thrustFuel -= Time.fixedDeltaTime;
+                }
+            }
         }
 
         //If boostCooldown is above 0, reduce it
@@ -80,17 +100,7 @@ public class SpaceMove : MonoBehaviour {
             boostCooldown -= Time.deltaTime;
         }
 
-        //Main thrust fuel consumption and regen
-        if (Input.GetAxis("MainThrust") != 0)
-        {
-            thrustRegenCooldown = MAIN_THRUST_FUEL_REGEN_MAX;
-
-            if (thrustFuel >= 0)
-            {
-                thrustFuel -= Time.fixedDeltaTime;
-            }
-        }
-        if (thrustRegenCooldown <= 0 && thrustFuel < MAIN_THRUST_FUEL_MAX && Input.GetAxis("MainThrust") == 0)
+        if (thrustRegenCooldown <= 0 && thrustFuel < MAIN_THRUST_FUEL_MAX && (Input.GetAxis("MainThrust") == 0 || gameManager.GetIsPaused()))
         {
             if (nearSurface)
             {

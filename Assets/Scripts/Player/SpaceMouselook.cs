@@ -5,6 +5,8 @@
 //This script is adapted from the above link ^^^
 public class SpaceMouselook : MonoBehaviour {
 
+    private GameManager gameManager;
+
     private static float ROLL_SPEED_CONSTANT = 7.0f;
 
     //Sensitivities for turning
@@ -14,17 +16,26 @@ public class SpaceMouselook : MonoBehaviour {
 
     private void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
     private void Update()
     {
-        Quaternion AddRot = Quaternion.identity;
-        float yaw = Input.GetAxis("Mouse X") * xsens;
-        float pitch = Input.GetAxis("Mouse Y") * ysens;
-        float roll = Input.GetAxis("ViewRot") * zsens * ROLL_SPEED_CONSTANT;
+        if (gameManager.GetIsPaused())
+        {
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
 
-        AddRot.eulerAngles = new Vector3(-pitch, yaw, roll);
-        transform.rotation *= AddRot;
+            Quaternion AddRot = Quaternion.identity;
+            float yaw = Input.GetAxis("Mouse X") * xsens;
+            float pitch = Input.GetAxis("Mouse Y") * ysens;
+            float roll = Input.GetAxis("ViewRot") * zsens * ROLL_SPEED_CONSTANT;
+
+            AddRot.eulerAngles = new Vector3(-pitch, yaw, roll);
+            transform.rotation *= AddRot;
+        }
     }
 }
