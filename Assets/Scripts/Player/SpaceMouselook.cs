@@ -3,7 +3,7 @@
 //This script allows players to look around in a 3D environment
 //https://keithmaggio.wordpress.com/2011/07/01/unity-3d-code-snippet-flight-script/
 //This script is adapted from the above link ^^^
-public class SpaceMouselook : MonoBehaviour {
+public class SpaceMouselook : Photon.MonoBehaviour {
 
     private GameManager gameManager;
 
@@ -17,10 +17,20 @@ public class SpaceMouselook : MonoBehaviour {
     private void Start()
     {
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
+        if (photonView.isMine == false && PhotonNetwork.connected == true)
+        {
+            GetComponentInChildren<Camera>().enabled = false;
+        }
     }
 
     private void Update()
     {
+        if (photonView.isMine == false && PhotonNetwork.connected == true)
+        {
+            return;
+        }
+
         if (gameManager.GetIsPaused())
         {
             Cursor.lockState = CursorLockMode.None;

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class SpaceMove : MonoBehaviour {
+public class SpaceMove : Photon.MonoBehaviour {
 
     private Rigidbody rigbod;
     private Slider thrustFuelSlider;
@@ -13,7 +13,7 @@ public class SpaceMove : MonoBehaviour {
     //Maximum speed to allow omnidirectional thrust
     public float MAX_SPEED_FOR_BASE = 5.0f;
     //Shift thrust force, forwards
-    public float MAIN_THRUST = 0.05f;
+    public float MAIN_THRUST = 0.07f;
     //Shift thrust fuel in seconds
     public float MAIN_THRUST_FUEL_MAX = 3.0f;
     //Shift thrust regen cooldown in seconds
@@ -48,6 +48,11 @@ public class SpaceMove : MonoBehaviour {
 
     private void FixedUpdate()
     {
+        if (photonView.isMine == false && PhotonNetwork.connected == true)
+        {
+            return;
+        }
+
         if (!gameManager.GetIsPaused())
         {
             //Only do omnidirectional thrust if you're very near a planet and going below a certain speed
@@ -73,6 +78,11 @@ public class SpaceMove : MonoBehaviour {
 
     private void Update()
     {
+        if (photonView.isMine == false && PhotonNetwork.connected == true)
+        {
+            return;
+        }
+
         if (!gameManager.GetIsPaused())
         {
             //Only do strong boost if you're very near a planet, walking, and not on cooldown
