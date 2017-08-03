@@ -13,7 +13,6 @@ public class PlayerWeapons : Photon.MonoBehaviour {
     private float grenadeForce = 10.0f;
     private float maxGrenadeCooldown = 0.5f;
     private float currentGrenadeCooldown;
-    private float grenadeSpawnZOffset = 1.0f;
 
     private void Start()
     {

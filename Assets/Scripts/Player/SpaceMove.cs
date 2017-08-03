@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class SpaceMove : Photon.MonoBehaviour {
+public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
 
     private Rigidbody rigbod;
+    private ParticleSystem thrusterParticles;
+
     private Slider thrustFuelSlider;
     private Slider boostCooldownSlider;
     private GameManager gameManager;
@@ -13,7 +15,7 @@ public class SpaceMove : Photon.MonoBehaviour {
     //Maximum speed to allow omnidirectional thrust
     public float MAX_SPEED_FOR_BASE = 5.0f;
     //Shift thrust force, forwards
-    public float MAIN_THRUST = 0.07f;
+    public float MAIN_THRUST = 2.0f;
     //Shift thrust fuel in seconds
     public float MAIN_THRUST_FUEL_MAX = 3.0f;
     //Shift thrust regen cooldown in seconds
@@ -28,6 +30,7 @@ public class SpaceMove : Photon.MonoBehaviour {
     public float BOOST_COOLDOWN_MAX = 3.0f;
 
     private bool nearSurface = false;
+    private bool isThrusting = false;
     private float boostCooldown = 0;
     private float thrustFuel = 1.0f;
     private float thrustRegenCooldown = 0;
@@ -35,6 +38,8 @@ public class SpaceMove : Photon.MonoBehaviour {
     private void Start()
     {
         rigbod = GetComponent<Rigidbody>();
+        thrusterParticles = transform.Find("ThrusterParticles").GetComponent<ParticleSystem>();
+
         thrustFuel = MAIN_THRUST_FUEL_MAX;
 
         thrustFuelSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("ThrustFuelSlider").GetComponent<Slider>();
@@ -46,8 +51,14 @@ public class SpaceMove : Photon.MonoBehaviour {
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
+        if (isThrusting)
+        {
+            thrusterParticles.Emit(1);
+            isThrusting = false;
+        }
+
         if (photonView.isMine == false && PhotonNetwork.connected == true)
         {
             return;
@@ -69,31 +80,22 @@ public class SpaceMove : Photon.MonoBehaviour {
             //Strong boost is located in Update()
 
             //Main thruster, for orbital adjustments
-            if (Input.GetAxis("MainThrust") != 0 && thrustFuel >= 0)
+            if (Input.GetButton("MainThrust") && thrustFuel >= 0)
             {
-                rigbod.AddForce(transform.forward * Input.GetAxis("MainThrust") * MAIN_THRUST, ForceMode.Impulse);
+                rigbod.AddForce(transform.forward * Input.GetAxis("MainThrust") * MAIN_THRUST, ForceMode.Force);
+
+                isThrusting = true;
             }
-        }
-    }
 
-    private void Update()
-    {
-        if (photonView.isMine == false && PhotonNetwork.connected == true)
-        {
-            return;
-        }
-
-        if (!gameManager.GetIsPaused())
-        {
             //Only do strong boost if you're very near a planet, walking, and not on cooldown
-            if (nearSurface && boostCooldown <= 0 && Input.GetAxis("Boost") != 0 && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
+            if (nearSurface && boostCooldown <= 0 && Input.GetButton("Boost") && rigbod.velocity.magnitude < MAX_SPEED_FOR_BASE)
             {
                 rigbod.AddForce(transform.forward * BOOST_FORCE, ForceMode.Impulse);
                 boostCooldown = BOOST_COOLDOWN_MAX;
             }
 
             //Main thrust fuel consumption and regen
-            if (Input.GetAxis("MainThrust") != 0)
+            if (Input.GetButton("MainThrust"))
             {
                 thrustRegenCooldown = MAIN_THRUST_FUEL_REGEN_MAX;
 
@@ -110,7 +112,7 @@ public class SpaceMove : Photon.MonoBehaviour {
             boostCooldown -= Time.deltaTime;
         }
 
-        if (thrustRegenCooldown <= 0 && thrustFuel < MAIN_THRUST_FUEL_MAX && (Input.GetAxis("MainThrust") == 0 || gameManager.GetIsPaused()))
+        if (thrustRegenCooldown <= 0 && thrustFuel < MAIN_THRUST_FUEL_MAX && (!Input.GetButton("MainThrust") || gameManager.GetIsPaused()))
         {
             if (nearSurface)
             {
@@ -143,6 +145,20 @@ public class SpaceMove : Photon.MonoBehaviour {
     {
         if (other.tag.Equals("Planet")) {
             nearSurface = false;
+        }
+    }
+
+    void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        Debug.Log("bleh");
+        if (stream.isWriting)
+        {
+            stream.SendNext(isThrusting);
+        }
+        else
+        {
+            // Network player, receive data
+            isThrusting = (bool) stream.ReceiveNext();
         }
     }
 }
