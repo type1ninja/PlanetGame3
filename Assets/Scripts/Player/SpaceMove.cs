@@ -5,6 +5,7 @@ public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
 
     private Rigidbody rigbod;
     private ParticleSystem thrusterParticles;
+    private ParticleSystem boostParticles;
 
     private Slider thrustFuelSlider;
     private Slider boostCooldownSlider;
@@ -39,6 +40,7 @@ public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
     {
         rigbod = GetComponent<Rigidbody>();
         thrusterParticles = transform.Find("ThrusterParticles").GetComponent<ParticleSystem>();
+        boostParticles = transform.Find("BoostParticles").GetComponent<ParticleSystem>();
 
         thrustFuel = MAIN_THRUST_FUEL_MAX;
 
@@ -92,6 +94,8 @@ public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
             {
                 rigbod.AddForce(transform.forward * BOOST_FORCE, ForceMode.Impulse);
                 boostCooldown = BOOST_COOLDOWN_MAX;
+
+                photonView.RPC("FireBoostParticles", PhotonTargets.All);
             }
 
             //Main thrust fuel consumption and regen
@@ -150,7 +154,6 @@ public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
 
     void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
-        Debug.Log("bleh");
         if (stream.isWriting)
         {
             stream.SendNext(isThrusting);
@@ -160,5 +163,11 @@ public class SpaceMove : Photon.MonoBehaviour, IPunObservable {
             // Network player, receive data
             isThrusting = (bool) stream.ReceiveNext();
         }
+    }
+
+    [PunRPC]
+    private void FireBoostParticles()
+    {
+        boostParticles.Play();
     }
 }
