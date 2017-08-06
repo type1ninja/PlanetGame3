@@ -49,7 +49,10 @@ public class Grenade : MonoBehaviour {
 
     private void Explode()
     {
-        //Deal damage to every player in the trigger radius
+        if (isLocal)
+        {
+
+        }
         
         explosionParticles.Play();
         explosionParticles.transform.SetParent(null);
