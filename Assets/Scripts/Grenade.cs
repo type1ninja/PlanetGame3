@@ -67,8 +67,7 @@ public class Grenade : MonoBehaviour {
         {
             foreach (Health nextHealth in healthsInRange)
             {
-                nextHealth.TakeDamage(50);
-                Debug.Log("Damaging " + nextHealth.gameObject.name);
+                nextHealth.photonView.RPC("TakeDamage", PhotonTargets.All, 50);
             }
         }
         

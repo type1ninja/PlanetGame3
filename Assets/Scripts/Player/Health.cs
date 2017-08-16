@@ -52,25 +52,19 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     }
 
     [PunRPC]
-    private void SetHealth(int newHealth)
+    public void TakeDamage(int damage)
     {
         if (photonView.isMine)
         {
-            Debug.Log("taking damage");
-            currentHealth = newHealth;
+            currentHealth -= damage;
         }
-    }
-
-    public void TakeDamage(int damage)
-    {
-        photonView.RPC("SetHealth", PhotonTargets.All, currentHealth - damage);
     }
     [PunRPC]
     private void Die()
     {
         Debug.Log("YOU ARE DED, NOT PIG SOUP RICE");
         currentHealth = MAX_HEALTH;
-        transform.position = new Vector3(0, -70, 0);
+        transform.position = new Vector3(0, 0, -70);
         deathCount++;
     }
 
