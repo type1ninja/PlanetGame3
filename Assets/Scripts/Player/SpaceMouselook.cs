@@ -21,6 +21,10 @@ public class SpaceMouselook : Photon.MonoBehaviour {
         if (photonView.isMine == false && PhotonNetwork.connected == true)
         {
             GetComponentInChildren<Camera>().enabled = false;
+            GetComponentInChildren<Skybox>().enabled = false;
+            GetComponentInChildren<GUILayer>().enabled = false;
+            GetComponentInChildren<FlareLayer>().enabled = false;
+            GetComponentInChildren<AudioListener>().enabled = false;
         }
     }
 

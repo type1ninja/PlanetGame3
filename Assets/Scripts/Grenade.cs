@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Grenade : MonoBehaviour {
 
@@ -12,6 +13,9 @@ public class Grenade : MonoBehaviour {
     private float despawnLifetime = 20.0f;
     private float fuseTime = 0.25f;
     bool triggered = false;
+
+    //List of health objects currently within the explosion radius
+    List<Health> healthsInRange = new List<Health>();
 
     private void Start()
     {
@@ -35,15 +39,25 @@ public class Grenade : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag.Equals("Player"))
+        if (other.gameObject.GetComponent<Health>() != null)
         {
             triggered = true;
+
+            healthsInRange.Add(other.GetComponent<Health>());
         }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        healthsInRange.Remove(other.GetComponent<Health>());
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        //TODO--Deal bonus damage if it's a player
+        if (isLocal)
+        {
+            //TODO--Deal bonus damage if it's a player
+        }
         Explode();
     } 
 
@@ -51,7 +65,11 @@ public class Grenade : MonoBehaviour {
     {
         if (isLocal)
         {
-
+            foreach (Health nextHealth in healthsInRange)
+            {
+                nextHealth.TakeDamage(50);
+                Debug.Log("Damaging " + nextHealth.gameObject.name);
+            }
         }
         
         explosionParticles.Play();

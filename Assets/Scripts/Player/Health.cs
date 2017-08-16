@@ -1,27 +1,41 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class Health : Photon.MonoBehaviour, IPunObservable {
-    private int maxHealth = 150;
-    private int currentHealth = 150;
+
+    private Slider healthSlider; 
+
+    private int MAX_HEALTH = 100;
+    private int currentHealth = 100;
+    private int deathCount = 0;
 
     private void Start()
     {
-        currentHealth = maxHealth;
+        healthSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("HealthSlider").GetComponent<Slider>();
+        healthSlider.maxValue = MAX_HEALTH;
+
+        currentHealth = MAX_HEALTH;
     }
 
     private void Update()
     {
-        //TODO--display health slider
-        if (currentHealth <= 0)
+        if (photonView.isMine == false && PhotonNetwork.connected == true)
         {
-            Debug.Log("YOU ARE DED, NOT PIG SOUP RICE");
+            return;
         }
 
+        healthSlider.value = currentHealth;
+
+        if (currentHealth <= 0)
+        {
+            photonView.RPC("Die", PhotonTargets.All);
+        }
+
+        //TODO--remove this self damage test code
         if (Input.GetButtonDown("SecondaryFire"))
         {
-            TakeDamage(100);
+            TakeDamage(25);
         }
-        Debug.Log(currentHealth);
     }
 
     void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
@@ -42,6 +56,7 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     {
         if (photonView.isMine)
         {
+            Debug.Log("taking damage");
             currentHealth = newHealth;
         }
     }
@@ -50,10 +65,17 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     {
         photonView.RPC("SetHealth", PhotonTargets.All, currentHealth - damage);
     }
+    [PunRPC]
+    private void Die()
+    {
+        Debug.Log("YOU ARE DED, NOT PIG SOUP RICE");
+        currentHealth = MAX_HEALTH;
+        transform.position = new Vector3(0, -70, 0);
+        deathCount++;
+    }
 
     private int GetHealth()
     {
         return currentHealth;
     }
-
 }
