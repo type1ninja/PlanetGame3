@@ -10,6 +10,8 @@ public class Grenade : MonoBehaviour {
     //the grenade is cosmetic.
     bool isLocal = false;
 
+    private int grenadeDamage = 75;
+    private int directHitBonusDmg = 50;
     private float despawnLifetime = 20.0f;
     private float fuseTime = 0.25f;
     bool triggered = false;
@@ -56,7 +58,10 @@ public class Grenade : MonoBehaviour {
     {
         if (isLocal)
         {
-            //TODO--Deal bonus damage if it's a player
+            if (collision.gameObject.GetComponent<Health>() != null)
+            {
+                collision.gameObject.GetComponent<Health>().photonView.RPC("TakeDamage", PhotonTargets.All, directHitBonusDmg);
+            }
         }
         Explode();
     } 
@@ -67,15 +72,16 @@ public class Grenade : MonoBehaviour {
         {
             foreach (Health nextHealth in healthsInRange)
             {
-                nextHealth.photonView.RPC("TakeDamage", PhotonTargets.All, 50);
+                nextHealth.photonView.RPC("TakeDamage", PhotonTargets.All, grenadeDamage);
             }
         }
         
         explosionParticles.Play();
         explosionParticles.transform.SetParent(null);
+        trailParticles.Stop();
         trailParticles.transform.SetParent(null);
 
-        Destroy(explosionParticles.gameObject, 0.4f);
+        Destroy(explosionParticles.gameObject, 2f);
         Destroy(trailParticles.gameObject, 5f);
         Destroy(gameObject);
     }

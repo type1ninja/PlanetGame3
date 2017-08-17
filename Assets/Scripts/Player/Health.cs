@@ -3,7 +3,8 @@ using UnityEngine.UI;
 
 public class Health : Photon.MonoBehaviour, IPunObservable {
 
-    private Slider healthSlider; 
+    private Slider healthSlider;
+    private Rigidbody rigbod;
 
     private int MAX_HEALTH = 100;
     private int currentHealth = 100;
@@ -13,6 +14,8 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     {
         healthSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("HealthSlider").GetComponent<Slider>();
         healthSlider.maxValue = MAX_HEALTH;
+
+        rigbod = GetComponent<Rigidbody>();
 
         currentHealth = MAX_HEALTH;
     }
@@ -26,15 +29,9 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
 
         healthSlider.value = currentHealth;
 
-        if (currentHealth <= 0)
+        if (currentHealth <= 0 || Input.GetButton("Suicide"))
         {
             photonView.RPC("Die", PhotonTargets.All);
-        }
-
-        //TODO--remove this self damage test code
-        if (Input.GetButtonDown("SecondaryFire"))
-        {
-            TakeDamage(25);
         }
     }
 
@@ -64,7 +61,8 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     {
         Debug.Log("YOU ARE DED, NOT PIG SOUP RICE");
         currentHealth = MAX_HEALTH;
-        transform.position = new Vector3(0, 0, -70);
+        transform.position = new Vector3(0, 0, -50);
+        rigbod.velocity = Vector3.zero;
         deathCount++;
     }
 
