@@ -1,28 +1,38 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerWeapons : Photon.MonoBehaviour {
 
     public GameObject GrenadePrefab;
 
-    private Transform GrenadeSpawnPositionTransform;
+    private Slider grenadeChargeSlider;
+
+    private Transform grenadeSpawnPositionTransform;
     private Rigidbody rigbod;
     private Collider col;
 
     private GameManager gameManager;
 
-    private float grenadeForce = 10.0f;
-    private float maxGrenadeCooldown = 0.5f;
-    private float currentGrenadeCooldown;
+    private float MAX_GRENADE_CHARGE_TIME = 4.0f;
+    private float MAX_GRENADE_FORCE = 35.0f;
+    private float MAX_GRENADE_COOLDOWN = 0.5f;
+
+    private float grenadeChargeTime = 0;
+    private float grenadeForce = 0;
+    private float grenadeCooldown;
 
     private void Start()
     {
-        GrenadeSpawnPositionTransform = transform.Find("GrenadeSpawnPosition");
+        grenadeChargeSlider = GameObject.Find("Canvas").transform.Find("HUDPanel").Find("GrenadeChargeSlider").GetComponent<Slider>();
+        grenadeChargeSlider.maxValue = MAX_GRENADE_CHARGE_TIME;
+
+        grenadeSpawnPositionTransform = transform.Find("GrenadeSpawnPosition");
         rigbod = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
 
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 
-        currentGrenadeCooldown = maxGrenadeCooldown;
+        grenadeCooldown = MAX_GRENADE_COOLDOWN;
     }
 
     private void Update()
@@ -34,18 +44,35 @@ public class PlayerWeapons : Photon.MonoBehaviour {
 
         if (!gameManager.GetIsPaused())
         {
-            if (Input.GetButton("PrimaryFire") && currentGrenadeCooldown <= 0)
+            //Grenade charging check
+            if (Input.GetButton("PrimaryFire"))
+            {
+                grenadeChargeTime += Time.deltaTime;
+                //Grenade force = % of total charge * maximum charge
+                grenadeForce = (grenadeChargeTime / MAX_GRENADE_CHARGE_TIME) * MAX_GRENADE_FORCE;
+                //Grenade force is limited to max grenade force
+                if (grenadeForce > MAX_GRENADE_FORCE)
+                {
+                    grenadeForce = MAX_GRENADE_FORCE;
+                }
+            }
+
+            grenadeChargeSlider.value = grenadeChargeTime;
+
+            //Grenade firing check
+            if (Input.GetButtonUp("PrimaryFire") && grenadeCooldown <= 0)
             {
                 //Call the method for ourselves, then call it as an RPC for everyone else
-                FireGrenade(GrenadeSpawnPositionTransform.position, transform.rotation, true, rigbod.velocity, transform.forward * grenadeForce);
-                photonView.RPC("FireGrenade", PhotonTargets.Others, GrenadeSpawnPositionTransform.position,
+                FireGrenade(grenadeSpawnPositionTransform.position, transform.rotation, true, rigbod.velocity, transform.forward * grenadeForce);
+                photonView.RPC("FireGrenade", PhotonTargets.Others, grenadeSpawnPositionTransform.position,
                     transform.rotation, false, rigbod.velocity, transform.forward * grenadeForce);
 
-                currentGrenadeCooldown = maxGrenadeCooldown;
+                grenadeCooldown = MAX_GRENADE_COOLDOWN;
+                grenadeChargeTime = 0;
             }
         }
 
-        currentGrenadeCooldown -= Time.deltaTime;
+        grenadeCooldown -= Time.deltaTime;
     }
 
     [PunRPC]
