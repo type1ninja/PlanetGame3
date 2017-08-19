@@ -59,7 +59,6 @@ public class Health : Photon.MonoBehaviour, IPunObservable {
     [PunRPC]
     private void Die()
     {
-        Debug.Log("YOU ARE DED, NOT PIG SOUP RICE");
         currentHealth = MAX_HEALTH;
         transform.position = new Vector3(0, 0, -50);
         rigbod.velocity = Vector3.zero;

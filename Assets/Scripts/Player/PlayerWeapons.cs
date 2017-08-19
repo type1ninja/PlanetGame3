@@ -1,13 +1,15 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerWeapons : Photon.MonoBehaviour {
+public class PlayerWeapons : Photon.MonoBehaviour, IPunObservable {
 
     public GameObject GrenadePrefab;
 
     private Slider grenadeChargeSlider;
 
     private Transform grenadeSpawnPositionTransform;
+    private Transform laserSpawnPositionTransform;
+    private LineRenderer laserGraphics;
     private Rigidbody rigbod;
     private Collider col;
 
@@ -16,10 +18,16 @@ public class PlayerWeapons : Photon.MonoBehaviour {
     private float MAX_GRENADE_CHARGE_TIME = 4.0f;
     private float MAX_GRENADE_FORCE = 35.0f;
     private float MAX_GRENADE_COOLDOWN = 0.5f;
+    private float MAX_LASER_RANGE = 200f;
+    private float MAX_LASER_DAMAGE_COOLDOWN = 0.5f;
+    private float LASER_DPS = 30;
 
     private float grenadeChargeTime = 0;
     private float grenadeForce = 0;
     private float grenadeCooldown;
+    private float laserCooldown;
+
+    private bool isFiringLasers = false;
 
     private void Start()
     {
@@ -27,16 +35,35 @@ public class PlayerWeapons : Photon.MonoBehaviour {
         grenadeChargeSlider.maxValue = MAX_GRENADE_CHARGE_TIME;
 
         grenadeSpawnPositionTransform = transform.Find("GrenadeSpawnPosition");
+        laserSpawnPositionTransform = transform.Find("LaserSpawnPosition");
+        laserGraphics = GetComponentInChildren<LineRenderer>();
         rigbod = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
 
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 
         grenadeCooldown = MAX_GRENADE_COOLDOWN;
+        laserCooldown = MAX_LASER_DAMAGE_COOLDOWN;
     }
 
     private void Update()
     {
+        if (isFiringLasers)
+        {
+            laserGraphics.enabled = true;
+            RaycastHit hit;
+            Vector3 endPos = new Vector3(0, 0, MAX_LASER_RANGE);
+            if (Physics.Raycast(transform.position, transform.forward, out hit, MAX_LASER_RANGE))
+            {
+                endPos = transform.InverseTransformPoint(hit.point);
+            }
+            laserGraphics.SetPosition(0, laserSpawnPositionTransform.localPosition);
+            laserGraphics.SetPosition(1, endPos);
+        } else
+        {
+            laserGraphics.enabled = false;
+        }
+
         if (photonView.isMine == false && PhotonNetwork.connected == true)
         {
             return;
@@ -70,9 +97,29 @@ public class PlayerWeapons : Photon.MonoBehaviour {
                 grenadeCooldown = MAX_GRENADE_COOLDOWN;
                 grenadeChargeTime = 0;
             }
+
+            //Laser firing check
+            if (Input.GetButton("SecondaryFire"))
+            {
+                isFiringLasers = true;
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, transform.forward, out hit, MAX_LASER_RANGE) && laserCooldown <= 0)
+                {
+                    if (hit.collider.gameObject.GetComponent<Health>() != null)
+                    {
+                        Debug.Log(((int)(MAX_LASER_DAMAGE_COOLDOWN * LASER_DPS)).GetType());
+                        hit.collider.gameObject.GetComponent<Health>().photonView.RPC("TakeDamage", PhotonTargets.All, (int) (MAX_LASER_DAMAGE_COOLDOWN * LASER_DPS));
+                        laserCooldown = MAX_LASER_DAMAGE_COOLDOWN;
+                    }
+                }
+            } else
+            {
+                isFiringLasers = false;
+            }
         }
 
         grenadeCooldown -= Time.deltaTime;
+        laserCooldown -= Time.deltaTime;
     }
 
     [PunRPC]
@@ -86,6 +133,19 @@ public class PlayerWeapons : Photon.MonoBehaviour {
         foreach (Collider grenadeCol in grenade.GetComponentsInChildren<Collider>())
         {
             Physics.IgnoreCollision(col, grenadeCol);
+        }
+    }
+
+    void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.isWriting)
+        {
+            stream.SendNext(isFiringLasers);
+        }
+        else
+        {
+            // Network player, receive data
+            isFiringLasers = (bool)stream.ReceiveNext();
         }
     }
 }

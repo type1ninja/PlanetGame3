@@ -24,7 +24,7 @@ public class Launcher : Photon.PunBehaviour {
     /// <summary>
     /// This client's version number. Users are separated from each other by gameversion (which allows you to make breaking changes).
     /// </summary>
-    private string _gameVersion = "0.3.1";
+    private string _gameVersion = "0.4.0";
 
     [Tooltip("The Ui Panel to let the user enter name, connect and play")]
     private GameObject menuButtonsPanel;
