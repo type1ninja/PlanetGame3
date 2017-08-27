@@ -49,16 +49,8 @@ public class GameManager : Photon.PunBehaviour {
 
     public void TogglePaused()
     {
-        if (isPaused)
-        {
-            isPaused = false;
-            pauseMenuPanel.SetActive(false);
-        }
-        else
-        {
-            isPaused = true;
-            pauseMenuPanel.SetActive(true);
-        }
+        isPaused = !isPaused;
+        pauseMenuPanel.SetActive(isPaused);
     }
 
     #endregion

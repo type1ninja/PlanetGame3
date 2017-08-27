@@ -13,7 +13,7 @@ public class Grenade : MonoBehaviour {
     private int grenadeDamage = 75;
     private int directHitBonusDmg = 50;
     private float despawnLifetime = 20.0f;
-    private float fuseTime = 0.25f;
+    private float fuseTime = 0.1f;
     bool triggered = false;
 
     //List of health objects currently within the explosion radius
