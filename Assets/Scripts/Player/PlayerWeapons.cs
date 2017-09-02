@@ -19,8 +19,8 @@ public class PlayerWeapons : Photon.MonoBehaviour, IPunObservable {
     private float MAX_GRENADE_FORCE = 75.0f;
     private float MAX_GRENADE_COOLDOWN = 0.5f;
     private float MAX_LASER_RANGE = 200f;
-    private float MAX_LASER_DAMAGE_COOLDOWN = 0.5f;
-    private float LASER_DPS = 30;
+    private float MAX_LASER_DAMAGE_COOLDOWN = 0.25f;
+    private float LASER_DPS = 40;
 
     private float grenadeChargeTime = 0;
     private float grenadeForce = 0;
