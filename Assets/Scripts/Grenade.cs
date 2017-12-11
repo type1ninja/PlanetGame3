@@ -13,8 +13,8 @@ public class Grenade : MonoBehaviour {
     private int grenadeDamage = 75;
     private int directHitBonusDmg = 50;
     private float despawnLifetime = 20.0f;
-    private float fuseTime = 0.1f;
-    bool triggered = false;
+    //private float fuseTime = 0.1f;
+    //bool triggered = false;
 
     //List of health objects currently within the explosion radius
     List<Health> healthsInRange = new List<Health>();
@@ -26,14 +26,15 @@ public class Grenade : MonoBehaviour {
     }
 
 	private void Update () {
-		if (triggered)
-        {
-            fuseTime -= Time.deltaTime;
-        }
+		//if (triggered)
+        //{
+        //    fuseTime -= Time.deltaTime;
+        //}
 
         despawnLifetime -= Time.deltaTime;
 
-        if (fuseTime <= 0 || despawnLifetime <= 0)
+        //if (fuseTime <= 0 || despawnLifetime <= 0)
+        if (despawnLifetime <= 0)
         {
             Explode();
         }
@@ -43,7 +44,7 @@ public class Grenade : MonoBehaviour {
     {
         if (other.gameObject.GetComponent<Health>() != null)
         {
-            triggered = true;
+            //triggered = true;
 
             healthsInRange.Add(other.GetComponent<Health>());
         }
@@ -51,7 +52,11 @@ public class Grenade : MonoBehaviour {
 
     private void OnTriggerExit(Collider other)
     {
-        healthsInRange.Remove(other.GetComponent<Health>());
+        //healthsInRange.Remove(other.GetComponent<Health>());
+        if (other.gameObject.GetComponent<Health>() != null)
+        { 
+            Explode();
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
